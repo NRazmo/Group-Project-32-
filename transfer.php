@@ -7,51 +7,44 @@ if (!isset($_SESSION['userID'])) {
 
 require 'connection.php';
 
+$success = '';
+$error = '';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $senderID = $_SESSION['userID'];
-    $recipientAccount = $_POST['recipientAccount'];
-    $sortCode = $_POST['sortCode'];
     $recipientName = $_POST['recipientName'];
+    $recipientAccount = $_POST['recipientAccount']; 
+    $sortCode = $_POST['sortCode']; 
     $amount = floatval($_POST['amount']);
 
     if ($amount <= 0) {
         $error = "Invalid amount.";
     } else {
-        $stmt = $conn->prepare("SELECT userID FROM Users WHERE accountNumber = :accountNumber AND sortCode = :sortCode");
-        $stmt->bindParam(':accountNumber', $recipientAccount);
-        $stmt->bindParam(':sortCode', $sortCode);
+        $stmt = $conn->prepare("SELECT balance FROM Users WHERE userID = :userID");
+        $stmt->bindParam(':userID', $senderID);
         $stmt->execute();
-        $recipient = $stmt->fetch(PDO::FETCH_ASSOC);
+        $sender = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$recipient) {
-            $error = "Recipient not found.";
+        if ($sender['balance'] < $amount) {
+            $error = "Insufficient balance.";
         } else {
-            $recipientID = $recipient['userID'];
-            $stmt = $conn->prepare("SELECT balance FROM Users WHERE userID = :userID");
-            $stmt->bindParam(':userID', $senderID);
-            $stmt->execute();
-            $sender = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($sender['balance'] < $amount) {
-                $error = "Insufficient balance.";
+            if ($amount > 1000) {
+                $_SESSION['transfer_data'] = [
+                    'recipientName' => $recipientName,
+                    'recipientAccount' => $recipientAccount, 
+                    'sortCode' => $sortCode, 
+                    'amount' => $amount,
+                    'senderID' => $senderID,
+                ];
+                header("Location: transaction_verify.php");
+                exit();
             } else {
                 $stmt = $conn->prepare("UPDATE Users SET balance = balance - :amount WHERE userID = :userID");
                 $stmt->bindParam(':amount', $amount);
                 $stmt->bindParam(':userID', $senderID);
                 $stmt->execute();
 
-                $stmt = $conn->prepare("UPDATE Users SET balance = balance + :amount WHERE userID = :userID");
-                $stmt->bindParam(':amount', $amount);
-                $stmt->bindParam(':userID', $recipientID);
-                $stmt->execute();
-
-                $stmt = $conn->prepare("INSERT INTO Transactions (senderID, recipientID, amount, transferDate) VALUES (:senderID, :recipientID, :amount, NOW())");
-                $stmt->bindParam(':senderID', $senderID);
-                $stmt->bindParam(':recipientID', $recipientID);
-                $stmt->bindParam(':amount', $amount);
-                $stmt->execute();
-
-                $success = "Transfer successful!";
+                $success = "Successfully sent £" . $amount . " to " . $recipientName;
             }
         }
     }
@@ -64,7 +57,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transfer Money</title>
-    <style>
+</head>
+<body>
+    <div class="transfer-box">
+        <div class="header">
+            <img src="Assets/icons8-banking-100.png" alt="Bank">
+            Quick Transfer
+        </div>
+        <?php if ($success): ?>
+            <p style="color: green;"><?php echo $success; ?></p>
+        <?php endif; ?>
+        <?php if ($error): ?>
+            <p style="color: red;"><?php echo $error; ?></p>
+        <?php endif; ?>
+        <form method="POST" action="transfer.php">
+            <label for="from">From:</label>
+            <select id="from" name="from">
+                <option>Quick Account</option>
+            </select>
+            <input type="text" name="amount" placeholder="Enter Amount (£)">
+            <label for="to">To:</label>
+            <input type="text" name="recipientAccount" placeholder="Account Number">
+            <input type="text" name="sortCode" placeholder="Sort Code">
+            <input type="text" name="recipientName" placeholder="Recipient Name">
+            <div class="button-container">
+                <button type="submit" class="confirm-btn">Confirm</button>
+                <button type="button" class="back-btn" onclick="window.location.href='dashboard.php'">Back</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+
+<style>
         body {
             font-family: Arial, sans-serif;
             background-color: #EFFFFC;
@@ -162,35 +187,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background: #545b62;
         }
     </style>
-</head>
-<body>
 
-    <div class="transfer-box">
-        <div class="header">
-            <img src="Assets/icons8-banking-100.png" alt="Bank">
-            Quick Transfer
-        </div>
-
-        <label for="from">From:</label>
-        <select id="from">
-            <option>Quick Account</option>
-        </select>
-
-        <input type="text" placeholder="Enter Amount (£)">
-
-        <label for="to">To:</label>
-        <input type="text" placeholder="Account Number">
-        <input type="text" placeholder="Sort Code">
-        <input type="text" placeholder="Recipient Name">
-
-        <div class="button-container">
-            <button class="confirm-btn">Confirm</button>
-            <button class="back-btn" onclick="window.location.href='dashboard.php'">Back</button>
-        </div>
-    </div>
-
-</body>
-</html>
 
 
 
