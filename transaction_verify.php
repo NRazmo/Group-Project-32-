@@ -76,9 +76,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['tac_code1'], $_POST['t
             <?php if ($errorMessage): ?>
                 <p class="error"><?php echo $errorMessage; ?></p>
             <?php endif; ?>
-            <?php if ($successMessage): ?>
-                <p style="color: green;"><?php echo $successMessage; ?></p>
                 <button onclick="window.location.href='dashboard.php'">Go to Dashboard</button>
+                <?php if ($successMessage): ?>
+                    <p style="color: green;"><?php echo $successMessage; ?></p>
             <?php endif; ?>
         </div>
     </main>
