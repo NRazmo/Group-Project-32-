@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $accountStatus = $_POST['accountStatus'];
     $loginInterval = intval($_POST['loginInterval']);
 
-    // Update the user's transfer limit, account status, and login interval
+    // Update the user account status
     try {
         $stmt = $conn->prepare("UPDATE Users SET accountStatus = :accountStatus, lastLogin = NOW() WHERE userID = :userID");
         $stmt->bindParam(':accountStatus', $accountStatus);
