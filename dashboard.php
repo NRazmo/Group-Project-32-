@@ -39,6 +39,17 @@ if ($user) {
             font-weight: bold;
             margin-top: 20px;
         }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button-container a button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -48,9 +59,9 @@ if ($user) {
             <img src="Assets/icons8-banking-100.png" alt="Bank" width="50" height="50">
         </a>
 
-        <div class="logout">
+        <div class="button-container">
             <a href="logout.php"><button>Logout</button></a>
-        </div>        
+        </div>
     </header>
 
     <main>
@@ -66,4 +77,6 @@ if ($user) {
     <script src="script.js" async defer></script>
 </body>
 </html>
+
+
 
