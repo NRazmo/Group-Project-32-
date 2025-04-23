@@ -7,7 +7,6 @@ if (!isset($_SESSION['userID'])) {
 
 require 'connection.php';
 
-$success = '';
 $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -28,24 +27,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($sender['balance'] < $amount) {
             $error = "Insufficient balance.";
         } else {
-            if ($amount > 1000) {
-                $_SESSION['transfer_data'] = [
-                    'recipientName' => $recipientName,
-                    'recipientAccount' => $recipientAccount,
-                    'sortCode' => $sortCode,
-                    'amount' => $amount,
-                    'senderID' => $senderID,
-                ];
-                header("Location: traffic_lights_verification.php"); // Redirect to image verification
-                exit();
-            } else {
-                $stmt = $conn->prepare("UPDATE Users SET balance = balance - :amount WHERE userID = :userID");
-                $stmt->bindParam(':amount', $amount);
-                $stmt->bindParam(':userID', $senderID);
-                $stmt->execute();
-
-                $success = "Successfully sent £" . $amount . " to " . $recipientName;
-            }
+            $_SESSION['transfer_data'] = [
+                'recipientName' => $recipientName,
+                'recipientAccount' => $recipientAccount,
+                'sortCode' => $sortCode,
+                'amount' => $amount,
+                'senderID' => $senderID,
+            ];
+            
+            header("Location: traffic_lights_verification.php");
+            exit();
         }
     }
 }
@@ -64,9 +55,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <img src="Assets/icons8-banking-100.png" alt="Bank">
             Quick Transfer
         </div>
-        <?php if ($success): ?>
-            <p style="color: green;"><?php echo $success; ?></p>
-        <?php endif; ?>
         <?php if ($error): ?>
             <p style="color: red;"><?php echo $error; ?></p>
         <?php endif; ?>
